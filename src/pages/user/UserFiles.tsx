@@ -41,7 +41,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { getRootFolders, getFolderChildren, createFolder, deleteFolder, FolderDto } from "@/api/folder";
+import { getRootFolders, getFolderChildren, createFolder, deleteFolder, updateFolderName, FolderDto } from "@/api/folder";
 import { toast } from "@/components/ui/use-toast";
 
 // Types
@@ -219,10 +219,34 @@ export default function UserFiles() {
     return () => { mounted = false; };
   }, []);
 
-  const handleRename = () => {
-    if (renameValue.trim() && selectedItem) {
-      // Rename logic here
-      console.log('Renaming:', selectedItem.name, 'to', renameValue);
+  const handleRename = async () => {
+    if (!renameValue.trim() || !selectedItem) return;
+
+    const newName = renameValue.trim();
+
+    try {
+      if (selectedItem.type !== 'folder') {
+        toast({ title: 'Rename', description: 'File rename not implemented.' });
+      } else {
+        const updated = await updateFolderName(selectedItem.id, newName);
+
+        // update rootItems
+        setRootItems((prev) => prev.map((r) => (r.id === updated.id ? { ...r, name: updated.name } : r)));
+
+        // update currentFolder
+        if (currentFolder && currentFolder.id === updated.id) {
+          setCurrentFolder((cf) => cf ? { ...cf, name: updated.name } : cf);
+        }
+
+        // update breadcrumbs
+        setBreadcrumbs((b) => b.map((bf) => (bf.id === updated.id ? { ...bf, name: updated.name } : bf)));
+
+        toast({ title: 'Folder renamed', description: `Renamed to "${updated.name}"` });
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Rename failed', description: message });
+    } finally {
       setRenameValue('');
       setShowRenameDialog(false);
       setSelectedItem(null);
