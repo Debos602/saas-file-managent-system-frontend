@@ -38,9 +38,10 @@ export default function UserManagement() {
                 const res = await getAllUsers();
                 if (!mounted) return;
                 setUsers(res.data || []);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 if (!mounted) return;
-                setError(err?.message || "Failed to load users");
+                const message = err instanceof Error ? err.message : String(err);
+                setError(message || "Failed to load users");
             } finally {
                 if (mounted) setLoading(false);
             }
@@ -72,9 +73,10 @@ export default function UserManagement() {
             setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
             setIsDeleteModalOpen(false);
             setUserToDelete(null);
-        } catch (err: any) {
+        } catch (err: unknown) {
             // Handle error (you might want to show a toast or set local error state)
-            console.error("Delete failed:", err);
+            const message = err instanceof Error ? err.message : String(err);
+            console.error("Delete failed:", message);
             alert("Failed to delete user. Please try again.");
         } finally {
             setDeleting(false);

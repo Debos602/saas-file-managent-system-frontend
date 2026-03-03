@@ -13,9 +13,8 @@ export async function getDashboardStats() {
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 

@@ -28,8 +28,9 @@ export default function LoginPage() {
       const result = await login(email, password);
       console.log("Login result:", result);
       navigate("/admin");
-    } catch (err: any) {
-      setError(err?.message || "Invalid credentials");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Invalid credentials");
     } finally {
       setLoading(false);
     }

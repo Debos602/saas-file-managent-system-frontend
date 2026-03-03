@@ -24,9 +24,8 @@ export async function createUser(payload: CreateUserPayload) {
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 
@@ -47,9 +46,8 @@ export async function getAllUsers(): Promise<GetAllUsersResponse> {
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 
@@ -85,9 +83,8 @@ export async function deleteUser(id: string): Promise<DeleteUserResponse> {
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 
@@ -122,16 +119,14 @@ export async function updateMyProfile(
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 
     if (!data) {
-        const err: any = new Error("Empty response from server");
-        err.response = res;
-        err.data = data;
+        const err = new Error("Empty response from server");
+        Object.assign(err, { response: res, data });
         throw err;
     }
 

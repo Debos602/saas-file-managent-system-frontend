@@ -37,9 +37,10 @@ export default function AdminPackages() {
         const res = await getPackages(1, 5);
         if (!mounted) return;
         setPackages(res.data || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!mounted) return;
-        setError(err?.message || "Failed to load packages");
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message || "Failed to load packages");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -57,14 +58,15 @@ export default function AdminPackages() {
       setLoading(true);
       const res = await getPackages(1, 20);
       setPackages(res.data || []);
-    } catch (err: any) {
-      setError(err?.message || "Failed to load packages");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Failed to load packages");
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleSave(payload: Record<string, any>) {
+  async function handleSave(payload: Record<string, unknown>) {
     setCreateError(null);
     setCreating(true);
     try {
@@ -77,8 +79,9 @@ export default function AdminPackages() {
       setEditingId(null);
       setForm({ name: "", maxFolders: 0, maxNestingLevel: 0, allowedFileTypes: "", maxFileSizeMB: 0, totalFileLimit: 0, filesPerFolder: 0 });
       await refreshPackages();
-    } catch (err: any) {
-      setCreateError(err?.message || "Failed to save package");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setCreateError(message || "Failed to save package");
     } finally {
       setCreating(false);
     }
@@ -92,15 +95,16 @@ export default function AdminPackages() {
       action: (
         <ToastAction
           altText="Confirm delete"
-          onClick={async () => {
+            onClick={async () => {
             t.dismiss();
             try {
               setLoading(true);
               await deletePackage(id);
               await refreshPackages();
               toast({ title: "Package deleted" });
-            } catch (err: any) {
-              setError(err?.message || "Failed to delete package");
+            } catch (err: unknown) {
+              const message = err instanceof Error ? err.message : String(err);
+              setError(message || "Failed to delete package");
             } finally {
               setLoading(false);
             }

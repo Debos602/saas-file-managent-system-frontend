@@ -4,8 +4,8 @@ import { Users, CreditCard, FileText, FolderOpen } from "lucide-react";
 import getDashboardStats from "@/api/admin";
 
 export default function AdminDashboard() {
-  const [dashboard, setDashboard] = useState<Record<string, any> | null>(null);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [dashboard, setDashboard] = useState<Record<string, unknown> | null>(null);
+  const [recentActivity, setRecentActivity] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const formatPercent = (v: any) => {
+  const formatPercent = (v: unknown) => {
     if (v == null || v === "") return "—";
     const n = Number(v);
     if (Number.isNaN(n)) return String(v);
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentActivity.map((row: any, i) => (
+                {recentActivity.map((row: Record<string, unknown>, i) => (
                   <tr key={i} className="border-b last:border-0">
                     <td className="py-3 pr-4 font-medium">{row.user ?? row.name ?? row.username}</td>
                     <td className="py-3 pr-4">

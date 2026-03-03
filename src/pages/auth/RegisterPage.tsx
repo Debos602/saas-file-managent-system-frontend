@@ -28,8 +28,9 @@ export default function RegisterPage() {
     try {
       await createUser({ email, name, password });
       setSuccess(true);
-    } catch (err: any) {
-      setError(err?.message || "Network error");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Network error");
       setSuccess(false);
     } finally {
       setLoading(false);

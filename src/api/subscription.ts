@@ -15,9 +15,8 @@ export async function getPackages(page = 1, limit = 5): Promise<GetPackagesRespo
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 
@@ -33,7 +32,7 @@ export async function getPackages(page = 1, limit = 5): Promise<GetPackagesRespo
 
 export default getPackages;
 
-export async function createPackage(payload: Record<string, any>) {
+export async function createPackage(payload: Record<string, unknown>) {
     const url = apiUrl(`/subscription/packages`);
 
     const res = await fetch(url, {
@@ -47,16 +46,15 @@ export async function createPackage(payload: Record<string, any>) {
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 
     return data;
 }
 
-export async function updatePackage(id: string, payload: Record<string, any>) {
+export async function updatePackage(id: string, payload: Record<string, unknown>) {
     const url = apiUrl(`/subscription/packages/${encodeURIComponent(id)}`);
 
     const res = await fetch(url, {
@@ -70,9 +68,8 @@ export async function updatePackage(id: string, payload: Record<string, any>) {
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 
@@ -92,9 +89,8 @@ export async function deletePackage(id: string) {
 
     if (!res.ok) {
         const message = (data && (data.message || data.error)) || `Request failed with status ${res.status}`;
-        const err: any = new Error(message);
-        err.response = res;
-        err.data = data;
+        const err = new Error(message);
+        Object.assign(err, { response: res, data });
         throw err;
     }
 
