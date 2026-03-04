@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Folder, 
   File, 
@@ -43,6 +43,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { getRootFolders, getFolderChildren, createFolder, deleteFolder, updateFolderName, FolderDto } from "@/api/folder";
 import { toast } from "@/components/ui/use-toast";
+import { useDeleteFolder } from "@/hooks/useFolder";
 
 // Types
 interface FileItem {
@@ -86,6 +87,9 @@ export default function UserFiles() {
   const [rootError, setRootError] = useState<string | null>(null);
   const [loadingChildren, setLoadingChildren] = useState(false);
   const [childrenError, setChildrenError] = useState<string | null>(null);
+
+
+  const { mutate: deleteFolderMutation, isPending: isDeleting } = useDeleteFolder();
 
   // Get current items (either root or folder contents)
   const currentItems = currentFolder?.children || rootItems;
@@ -253,52 +257,11 @@ export default function UserFiles() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete =  () => {
     if (!selectedItem) return;
     const id = selectedItem.id;
     setShowDeleteDialog(false);
-
-    try {
-      if (selectedItem.type === 'folder') {
-        await deleteFolder(id);
-
-        // If viewing root, refresh root list; else refresh current folder children
-        if (!currentFolder) {
-          const folders = await getRootFolders();
-          const data: FolderItem[] = folders.map((f: FolderDto) => ({
-            id: f.id,
-            name: f.name,
-            type: 'folder',
-            itemCount: 0,
-            modified: f.updatedAt || f.createdAt || new Date().toISOString(),
-            children: [],
-          }));
-          setRootItems(data);
-        } else {
-          const children = await getFolderChildren(currentFolder.id);
-          const childItems: FolderItem[] = children.map((f: FolderDto) => ({
-            id: f.id,
-            name: f.name,
-            type: 'folder',
-            itemCount: 0,
-            modified: f.updatedAt || f.createdAt || new Date().toISOString(),
-            children: [],
-          }));
-          setCurrentFolder((cf) => cf ? { ...cf, children: childItems } : cf);
-          setRootItems((prev) => prev.map((r) => (r.id === currentFolder?.id ? { ...r, children: childItems } : r)));
-        }
-
-        toast({ title: 'Folder deleted' });
-      } else {
-        // file delete not implemented yet
-        toast({ title: 'Delete', description: 'File deletion not implemented yet.' });
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      toast({ title: 'Delete failed', description: message });
-    } finally {
-      setSelectedItem(null);
-    }
+    deleteFolderMutation(id);
   };
 
   const handleUpload = () => {
@@ -501,13 +464,14 @@ export default function UserFiles() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="rounded-lg">
                         {item.type === 'file' && (
-                          <DropdownMenuItem className="gap-2">
+                          <DropdownMenuItem className="gap-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                             <Download className="h-4 w-4" /> Download
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem 
                           className="gap-2"
-                          onClick={() => {
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
                             setSelectedItem(item);
                             setRenameValue(item.name);
                             setShowRenameDialog(true);
@@ -517,7 +481,8 @@ export default function UserFiles() {
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="gap-2 text-destructive"
-                          onClick={() => {
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
                             setSelectedItem(item);
                             setShowDeleteDialog(true);
                           }}
@@ -574,14 +539,15 @@ export default function UserFiles() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-lg">
-                          {item.type === 'file' && (
-                            <DropdownMenuItem className="gap-2">
-                              <Download className="h-4 w-4" /> Download
-                            </DropdownMenuItem>
-                          )}
+                            {item.type === 'file' && (
+                              <DropdownMenuItem className="gap-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                <Download className="h-4 w-4" /> Download
+                              </DropdownMenuItem>
+                            )}
                           <DropdownMenuItem 
                             className="gap-2"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setSelectedItem(item);
                               setRenameValue(item.name);
                               setShowRenameDialog(true);
@@ -591,7 +557,8 @@ export default function UserFiles() {
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="gap-2 text-destructive"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setSelectedItem(item);
                               setShowDeleteDialog(true);
                             }}

@@ -31,7 +31,7 @@ export interface GetAllUsersResponse {
     meta?: Meta;
 }
 
-export type UpdateProfilePayload = Record<string, any>;
+export type UpdateProfilePayload = Record<string, unknown>;
 
 export interface UpdateMyProfileResponse {
     success?: boolean;
@@ -64,3 +64,12 @@ export interface GetPackagesResponse {
     meta?: Meta;
 }
 
+export type Folder = {
+  id: string;
+  name: string;
+  userId: string;
+  parentId: string | null;
+  level: number;
+  createdAt: string;
+  updatedAt: string;
+};
