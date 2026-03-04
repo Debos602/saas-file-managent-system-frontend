@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Folder, 
   File, 
@@ -44,6 +44,7 @@ import { cn } from "@/lib/utils";
 import { getRootFolders, getFolderChildren, createFolder, deleteFolder, updateFolderName, FolderDto } from "@/api/folder";
 import { toast } from "@/components/ui/use-toast";
 import { useDeleteFolder } from "@/hooks/useFolder";
+import { useUploadFile } from "@/hooks/useFile";
 
 // Types
 interface FileItem {
@@ -90,6 +91,8 @@ export default function UserFiles() {
 
 
   const { mutate: deleteFolderMutation, isPending: isDeleting } = useDeleteFolder();
+  const { mutate: uploadFileMutate } = useUploadFile();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Get current items (either root or folder contents)
   const currentItems = currentFolder?.children || rootItems;
@@ -264,20 +267,40 @@ export default function UserFiles() {
     deleteFolderMutation(id);
   };
 
-  const handleUpload = () => {
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setIsUploading(true);
-    // Simulate upload progress
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        setIsUploading(false);
-        setShowUploadDialog(false);
-        setUploadProgress(0);
+    setUploadProgress(0);
+
+    // fixed user and folder id as requested
+    const userId = "300cba1d-93e8-4bcd-aa60-45753dbfd4d9";
+    const folderId = currentFolder?.id ?? "03a1bdbd-1bd2-41db-bc25-8bcfe134dc94";
+
+    uploadFileMutate(
+      { file, folderId, user: userId, onProgress: (p: number) => setUploadProgress(p) },
+      {
+        onSuccess: () => {
+          setIsUploading(false);
+          setShowUploadDialog(false);
+          setUploadProgress(0);
+          toast({ title: "Upload complete", description: `${file.name} uploaded` });
+        },
+        onError: (err: unknown) => {
+          setIsUploading(false);
+          setUploadProgress(0);
+          const message = err instanceof Error ? err.message : String(err);
+          toast({ title: "Upload failed", description: message });
+        },
       }
-    }, 300);
+    );
+    // clear the input so same file can be selected again
+    e.currentTarget.value = "";
   };
 
   // Get file icon component
@@ -689,16 +712,19 @@ export default function UserFiles() {
                 <Progress value={uploadProgress} className="h-2" />
               </div>
             ) : (
-              <div 
-                className="border-2 border-dashed rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer"
-                onClick={handleUpload}
-              >
-                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm font-medium">Click to upload or drag and drop</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Support for images, videos, audio, PDFs
-                </p>
-              </div>
+              <>
+                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelected} />
+                <div 
+                  className="border-2 border-dashed rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer"
+                  onClick={handleUploadClick}
+                >
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm font-medium">Click to upload or drag and drop</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Support for images, videos, audio, PDFs
+                  </p>
+                </div>
+              </>
             )}
           </div>
           <DialogFooter>

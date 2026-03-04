@@ -1,4 +1,5 @@
 import { apiUrl } from "./base";
+import { FileDto } from "@/types/api";
 
 export type FolderDto = {
   id: string;

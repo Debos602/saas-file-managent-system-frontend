@@ -73,3 +73,14 @@ export type Folder = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type FileDto = {
+    id: string;
+    name: string;
+    folderId: string;
+    size?: number;
+    mimeType?: string;
+    url?: string;
+    createdAt?: string;
+    updatedAt?: string;
+};
