@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
 import { getRootFolders, getFolderChildren, createFolder, deleteFolder, updateFolderName, FolderDto } from "@/api/folder";
 import { toast } from "@/components/ui/use-toast";
 import { useDeleteFolder } from "@/hooks/useFolder";
-import { useUploadFile } from "@/hooks/useFile";
+import { useUploadFile, useFilesByFolder } from "@/hooks/useFile";
 
 // Types
 interface FileItem {
@@ -94,8 +94,61 @@ export default function UserFiles() {
   const { mutate: uploadFileMutate } = useUploadFile();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Get current items (either root or folder contents)
-  const currentItems = currentFolder?.children || rootItems;
+  // Files from API for the current folder (or root)
+  // pass `null` when viewing root so the hook normalizes to "root" internally
+  const folderIdForQuery = currentFolder?.id ?? null;
+  const { data: filesFromApi, isLoading: filesLoading, error: filesError } = useFilesByFolder(folderIdForQuery);
+
+  // Helpers to map API files to local FileItem shape
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const detectFileType = (mime?: string, name?: string) => {
+    if (mime?.startsWith("image")) return "image" as const;
+    if (mime?.startsWith("video")) return "video" as const;
+    if (mime?.startsWith("audio")) return "audio" as const;
+    if (mime === "application/pdf" || name?.toLowerCase().endsWith(".pdf")) return "pdf" as const;
+    return "other" as const;
+  };
+
+  const getIconForType = (type: string) => {
+    switch (type) {
+      case "image":
+        return Image;
+      case "video":
+        return Video;
+      case "audio":
+        return Music;
+      case "pdf":
+        return FileText;
+      default:
+        return FileIcon;
+    }
+  };
+
+  // Map API files to FileItem
+  const apiFileItems: FileItem[] = (filesFromApi ?? []).map((f) => {
+    const fileType = detectFileType(f.mimeType, f.name);
+    return {
+      id: f.id,
+      name: f.name,
+      type: "file",
+      fileType,
+      size: formatBytes(f.size ?? 0),
+      modified: f.updatedAt ?? f.createdAt ?? "",
+      icon: getIconForType(fileType),
+      color: undefined,
+    };
+  });
+
+  // Get current items (folders + files)
+  const folderItems = currentFolder?.children || rootItems;
+  const currentItems = [...folderItems, ...apiFileItems];
 
   // Filter items based on search
   const filteredItems = currentItems.filter(item =>
@@ -278,9 +331,9 @@ export default function UserFiles() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    // fixed user and folder id as requested
+    // use current folder id or null for root
     const userId = "300cba1d-93e8-4bcd-aa60-45753dbfd4d9";
-    const folderId = currentFolder?.id ?? "03a1bdbd-1bd2-41db-bc25-8bcfe134dc94";
+    const folderId = currentFolder?.id ?? null;
 
     uploadFileMutate(
       { file, folderId, user: userId, onProgress: (p: number) => setUploadProgress(p) },

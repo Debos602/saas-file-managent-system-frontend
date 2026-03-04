@@ -4,10 +4,11 @@ import { FileDto } from "@/types/api";
 import { fileKeys } from "@/hooks/useFolder";
 
 export const useFilesByFolder = (folderId: string | null) => {
+  const key = fileKeys.byFolder(folderId ?? "root");
   return useQuery<FileDto[]>({
-    queryKey: folderId ? fileKeys.byFolder(folderId) : ["files", "byFolder", "none"],
+    queryKey: key,
     queryFn: () => getFilesByFolder(folderId ?? "root"),
-    enabled: !!folderId,
+    enabled: true,
     staleTime: 1000 * 60 * 2,
   });
 };
